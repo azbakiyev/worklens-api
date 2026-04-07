@@ -325,8 +325,8 @@ load();
 </script></body></html>"""
 
 @app.get("/admin", response_class=HTMLResponse)
-async def admin_ui(x_admin_key: str = Header(default="")):
-    require_admin(x_admin_key)
+async def admin_ui(key: str = "", x_admin_key: str = Header(default="")):
+    require_admin(key or x_admin_key)
     return ADMIN_HTML
 
 @app.post("/admin/tokens")
