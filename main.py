@@ -121,6 +121,11 @@ class AnalyzeReq(BaseModel):
     token: str
     source: str = "telegram"
 
+
+class AnalyzePatternsReq(BaseModel):
+    data: str
+    token: str
+
 class TranscribeReq(BaseModel):
     audio_b64: str
     token: str
@@ -254,6 +259,81 @@ async def install_win(token: str = ""):
         media_type="application/octet-stream",
         headers={"Content-Disposition": "attachment; filename=install_worklens.bat"}
     )
+
+
+@app.post("/analyze_patterns")
+async def analyze_patterns(req: AnalyzePatternsReq):
+    """
+    Receives structured activity summary text from WorkLens client.
+    Calls GPT-4o to generate automation suggestions.
+    Returns JSON array of suggestions.
+    """
+    if not check_token(req.token):
+        raise HTTPException(status_code=401, detail="Invalid token")
+    if not req.data or len(req.data.strip()) < 50:
+        raise HTTPException(status_code=400, detail="Insufficient data")
+    if not OPENAI_API_KEY:
+        raise HTTPException(status_code=503, detail="Service not configured")
+
+    system_prompt = """You are a business process automation expert.
+
+Analyze this employee work activity data and identify TOP automation opportunities.
+
+Return a JSON object with key "suggestions" containing an array (max 6 items), sorted by impact:
+{
+  "suggestions": [
+    {
+      "title": "Short title (max 8 words)",
+      "description": "What the employee does manually and why automate (2-3 sentences)",
+      "evidence": "Specific data proving this pattern",
+      "time_per_week_hours": 3.5,
+      "automation_tool": "Specific tool: Zapier / Python script / Make.com / API integration / etc",
+      "implementation_hours": 8,
+      "priority": "high|medium|low",
+      "category": "data_transfer|reporting|communication|file_processing|approval"
+    }
+  ]
+}
+
+Rules:
+- Base suggestions ONLY on provided data
+- time_per_week_hours must be realistic based on event counts (5 sec each)
+- If an app has 1000 events = ~1.4h total tracked
+- implementation_hours: 2-40 range
+- Return ONLY valid JSON, no markdown"""
+
+    try:
+        async with httpx.AsyncClient(timeout=60) as client:
+            resp = await client.post(
+                "https://api.openai.com/v1/chat/completions",
+                headers={"Authorization": f"Bearer {OPENAI_API_KEY}",
+                         "Content-Type": "application/json"},
+                json={
+                    "model": "gpt-4o",
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user",   "content": req.data[:4000]}
+                    ],
+                    "temperature": 0.3,
+                    "max_tokens": 2000,
+                    "response_format": {"type": "json_object"}
+                }
+            )
+        if resp.status_code == 429:
+            raise HTTPException(status_code=429, detail="Rate limit")
+        if resp.status_code != 200:
+            raise HTTPException(status_code=502, detail=f"OpenAI error {resp.status_code}")
+
+        raw = resp.json()["choices"][0]["message"]["content"]
+        parsed = json.loads(raw)
+        suggestions = parsed.get("suggestions", [])
+        return {"ok": True, "suggestions": suggestions}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"analyze_patterns error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # ─── Admin routes ─────────────────────────────────────────────────────────────
 ADMIN_HTML = """<!DOCTYPE html>
