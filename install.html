@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WorkLens — Установка</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+     background:#f5f6fa;min-height:100vh;display:flex;
+     align-items:center;justify-content:center;padding:40px 20px}
+.card{background:#fff;border-radius:20px;padding:48px;max-width:560px;width:100%;
+      box-shadow:0 4px 24px rgba(0,0,0,.08);text-align:center}
+.logo{font-size:28px;font-weight:800;color:#4caf50;margin-bottom:8px}
+.tagline{color:#666;font-size:15px;margin-bottom:36px;line-height:1.5}
+.token-box{background:#f9fff9;border:1.5px solid #c8e6c9;border-radius:12px;
+           padding:18px;margin-bottom:28px}
+.token-box label{font-size:13px;font-weight:600;color:#444;display:block;margin-bottom:8px}
+.token-input{width:100%;border:1.5px solid #e0e0e0;border-radius:8px;
+             padding:11px 14px;font-size:14px;outline:none;font-family:monospace;
+             transition:border .15s}
+.token-input:focus{border-color:#4caf50}
+.token-hint{font-size:12px;color:#888;margin-top:6px}
+.btns{display:flex;gap:12px;margin-bottom:20px}
+.btn{flex:1;padding:14px;border-radius:11px;border:none;cursor:pointer;
+     font-size:15px;font-weight:600;text-decoration:none;display:flex;
+     align-items:center;justify-content:center;gap:8px;transition:all .15s}
+.btn-mac{background:#1a1a1a;color:#fff}
+.btn-mac:hover{background:#333}
+.btn-win{background:#0078d4;color:#fff}
+.btn-win:hover{background:#106ebe}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.steps{text-align:left;background:#f8f9fa;border-radius:12px;
+       padding:18px 20px;margin-bottom:20px}
+.steps h3{font-size:13px;font-weight:600;color:#888;text-transform:uppercase;
+          letter-spacing:.05em;margin-bottom:12px}
+.step{display:flex;gap:12px;align-items:flex-start;margin-bottom:10px}
+.step:last-child{margin-bottom:0}
+.sn{width:22px;height:22px;background:#4caf50;color:#fff;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-size:12px;
+    font-weight:700;flex-shrink:0;margin-top:1px}
+.st{font-size:13px;color:#555;line-height:1.4}
+.footer{font-size:12px;color:#aaa}
+.err{color:#e53935;font-size:13px;margin-bottom:12px;display:none}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">WorkLens</div>
+  <div class="tagline">AI-помощник который находит рутину в вашей работе<br>и предлагает автоматизации</div>
+
+  <div class="token-box">
+    <label>Ваш токен доступа</label>
+    <input class="token-input" id="token" type="text"
+           placeholder="wl_..." autocomplete="off" spellcheck="false">
+    <div class="token-hint">Токен предоставляется вашим администратором</div>
+  </div>
+  <div class="err" id="err">Введите токен для скачивания</div>
+
+  <div class="btns">
+    <a class="btn btn-mac" id="btn-mac" onclick="return dl('mac')">
+      🍎 Скачать для Mac
+    </a>
+    <a class="btn btn-win" id="btn-win" onclick="return dl('win')">
+      🪟 Скачать для Windows
+    </a>
+  </div>
+
+  <div class="steps">
+    <h3>Как установить</h3>
+    <div class="step">
+      <div class="sn">1</div>
+      <div class="st">Введите токен выше и скачайте установщик для вашей системы</div>
+    </div>
+    <div class="step">
+      <div class="sn">2</div>
+      <div class="st"><b>Mac:</b> откройте скачанный файл правой кнопкой → <i>Открыть</i><br>
+        <b>Windows:</b> запустите скачанный .bat файл от имени администратора</div>
+    </div>
+    <div class="step">
+      <div class="sn">3</div>
+      <div class="st">Установка занимает 2-3 минуты. После завершения WorkLens откроется автоматически</div>
+    </div>
+    <div class="step">
+      <div class="sn">4</div>
+      <div class="st">Настройте Telegram в открывшемся браузере — и WorkLens начнёт работу</div>
+    </div>
+  </div>
+
+  <div class="footer">WorkLens работает локально на вашем компьютере.<br>
+    Данные не передаются третьим лицам.</div>
+</div>
+
+<script>
+function dl(platform) {
+  const token = document.getElementById('token').value.trim();
+  const err = document.getElementById('err');
+  if (!token || !token.startsWith('wl_')) {
+    err.style.display = 'block';
+    err.textContent = token ? 'Неверный формат токена (должен начинаться с wl_)' : 'Введите токен для скачивания';
+    return false;
+  }
+  err.style.display = 'none';
+  window.location.href = `/install/${platform}?token=${encodeURIComponent(token)}`;
+  return false;
+}
+</script>
+</body></html>

@@ -209,6 +209,52 @@ async def transcribe(req: TranscribeReq):
         logger.error(f"Transcribe: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# ─── Install / landing page ───────────────────────────────────────────────────
+@app.get("/install", response_class=HTMLResponse)
+async def install_page():
+    html = Path(__file__).parent / "install.html"
+    return html.read_text(encoding="utf-8")
+
+
+@app.get("/install/mac")
+async def install_mac(token: str = ""):
+    row = check_token(token) if token else None
+    if not row:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    script = Path(__file__).parent / "install_mac.sh"
+    content = script.read_text(encoding="utf-8")
+    # Embed token into installer
+    content = content.replace(
+        "WORKLENS_TOKEN=""",
+        f'WORKLENS_TOKEN="{token}"'
+    )
+    from fastapi.responses import Response
+    return Response(
+        content=content,
+        media_type="application/x-sh",
+        headers={"Content-Disposition": "attachment; filename=install_worklens.sh"}
+    )
+
+
+@app.get("/install/win")
+async def install_win(token: str = ""):
+    row = check_token(token) if token else None
+    if not row:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    script = Path(__file__).parent / "install_win.bat"
+    content = script.read_text(encoding="utf-8")
+    content = content.replace(
+        "WORKLENS_TOKEN=",
+        f'WORKLENS_TOKEN={token}'
+    )
+    from fastapi.responses import Response
+    return Response(
+        content=content,
+        media_type="application/octet-stream",
+        headers={"Content-Disposition": "attachment; filename=install_worklens.bat"}
+    )
+
 # ─── Admin routes ─────────────────────────────────────────────────────────────
 ADMIN_HTML = """<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><title>WorkLens Admin</title>
