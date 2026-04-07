@@ -300,7 +300,8 @@ Rules:
 - time_per_week_hours must be realistic based on event counts (5 sec each)
 - If an app has 1000 events = ~1.4h total tracked
 - implementation_hours: 2-40 range
-- Return ONLY valid JSON, no markdown"""
+- Return ONLY valid JSON, no markdown
+- IMPORTANT: Write ALL text fields (title, description, evidence, automation_tool) in RUSSIAN language"""
 
     try:
         async with httpx.AsyncClient(timeout=60) as client:
